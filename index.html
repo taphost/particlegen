@@ -455,52 +455,147 @@ input[type="checkbox"] {
   justify-content: flex-end;
 }
 
+/* Mobile Responsive */
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
   }
-  
+
   .canvas-container {
-    height: 60vh;
+    flex: 1;
   }
-  
+
   .sidebar {
-    position: relative;
     width: 100%;
-    max-width: none;
-    height: 40vh;
+    height: 50vh;
+    max-height: 50vh;
     border-left: none;
     border-top: 1px solid #333;
-    transform: none !important;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    transform: translateY(0);
   }
-  
+
   .sidebar.hidden {
-    transform: translateY(100%) !important;
+    transform: translateY(100%);
   }
-  
+
   .sidebar-toggle {
+    position: absolute;
     left: 50%;
     top: -40px;
+    bottom: auto;
+    right: auto;
     transform: translateX(-50%);
     width: 80px;
     height: 40px;
     border-radius: 8px 8px 0 0;
-    border-right: 1px solid #333;
+    border: 1px solid #333;
     border-bottom: none;
+    font-size: 0;
   }
   
+  .sidebar-toggle::before {
+    content: '▼';
+    font-size: 20px;
+  }
+
   .sidebar.hidden .sidebar-toggle {
-    left: 50%;
-    right: auto;
     top: auto;
     bottom: 100%;
+    left: 50%;
+    right: auto;
     transform: translateX(-50%);
     border-radius: 8px 8px 0 0;
   }
   
-  .modal-content {
-    width: 100%;
-    max-width: 500px;
+  .sidebar.hidden .sidebar-toggle::before {
+    content: '▲';
+  }
+
+  .sidebar-header {
+    padding: 10px 12px;
+  }
+
+  .header-top {
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .sidebar-header h1 {
+    font-size: 15px;
+  }
+
+  .preset-control .control-label {
+    font-size: 9px;
+  }
+
+  .preset-control select {
+    width: 90px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .control-label {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  select {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .slider-value {
+    font-size: 11px;
+    min-width: 40px;
+  }
+
+  .action-buttons {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .btn {
+    padding: 7px 8px;
+    font-size: 10px;
+  }
+
+  .section-header {
+    padding: 10px 12px;
+  }
+
+  .section-title {
+    font-size: 12px;
+  }
+
+  .section-content {
+    padding: 10px 12px;
+  }
+
+  .control-group {
+    margin-bottom: 12px;
+  }
+
+  .controls-container {
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  input[type="number"] {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .checkbox-label {
+    font-size: 12px;
+  }
+
+  .color-value {
+    font-size: 11px;
   }
 }
 </style>
