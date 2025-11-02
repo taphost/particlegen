@@ -95,8 +95,30 @@ canvas {
 
 .sidebar-header h1 {
   font-size: 20px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   font-weight: 600;
+}
+
+.header-top {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preset-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.preset-control .control-label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.preset-control select {
+  flex: 1;
 }
 
 .action-buttons {
@@ -521,6 +543,9 @@ input[type="checkbox"] {
   }
 
   .header-top {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 8px;
     gap: 8px;
   }
@@ -611,17 +636,19 @@ input[type="checkbox"] {
     <div class="sidebar-toggle" id="sidebarToggle">◀</div>
     
     <div class="sidebar-header">
-      <h1>Particles Generator</h1>
-      
-      <div class="control-group">
-        <label class="control-label">Preset</label>
-        <select id="presetSelect">
-          <option value="confetti">Confetti</option>
-          <option value="snow">Snow</option>
-          <option value="rain">Rain</option>
-          <option value="stars">Stars</option>
-          <option value="fireflies">Fireflies</option>
-        </select>
+      <div class="header-top">
+        <h1>Particles Generator</h1>
+        
+        <div class="preset-control">
+          <label class="control-label">Preset</label>
+          <select id="presetSelect">
+            <option value="confetti">Confetti</option>
+            <option value="snow">Snow</option>
+            <option value="rain">Rain</option>
+            <option value="stars">Stars</option>
+            <option value="fireflies">Fireflies</option>
+          </select>
+        </div>
       </div>
       
       <div class="action-buttons">
