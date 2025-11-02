@@ -987,7 +987,7 @@ const PRESETS = {
 };
 
 const state = {
-  isPlaying: false,
+  isPlaying: true,
   canvas: null,
   ctx: null,
   particles: [],
@@ -1208,7 +1208,7 @@ function init() {
   
   initParticles();
   initControls();
-  draw();
+  animate();
 }
 
 function resizeCanvas() {
@@ -1268,6 +1268,10 @@ function redraw() {
 }
 
 function initControls() {
+  // Set initial button states for autoplay
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('pauseBtn').disabled = false;
+  
   document.querySelectorAll('.section-header').forEach(header => {
     header.addEventListener('click', () => {
       header.parentElement.classList.toggle('collapsed');
