@@ -1,1557 +1,1563 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Particles Generator</title>
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: #111;
-  color: #fff;
-  overflow: hidden;
-}
-
-.container {
-  display: flex;
-  height: 100vh;
-  position: relative;
-}
-
-.canvas-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-}
-
-canvas {
-  max-width: 100%;
-  max-height: 100%;
-  display: block;
-}
-
-.sidebar {
-  width: 380px;
-  background: #1a1a1a;
-  border-left: 1px solid #333;
-  display: flex;
-  flex-direction: column;
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  transition: transform 0.3s ease;
-  z-index: 100;
-}
-
-.sidebar.hidden {
-  transform: translateX(100%);
-}
-
-.sidebar-toggle {
-  position: absolute;
-  left: -40px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 80px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 20px;
-  transition: background 0.2s;
-  z-index: 101;
-}
-
-.sidebar-toggle:hover {
-  background: #2a2a2a;
-}
-
-.sidebar.hidden .sidebar-toggle {
-  left: auto;
-  right: 100%;
-  border-radius: 8px 0 0 8px;
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #333;
-  flex-shrink: 0;
-}
-
-.sidebar-header h1 {
-  font-size: 20px;
-  margin-bottom: 0;
-  font-weight: 600;
-}
-
-.header-top {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.preset-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.preset-control .control-label {
-  margin: 0;
-  white-space: nowrap;
-}
-
-.preset-control select {
-  flex: 1;
-}
-
-.action-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.btn {
-  padding: 10px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s;
-  background: #2a2a2a;
-  color: #fff;
-  border: 1px solid #333;
-}
-
-.btn:hover {
-  background: #333;
-  border-color: #444;
-}
-
-.btn.btn-primary {
-  background: #a855f7;
-  border-color: #a855f7;
-}
-
-.btn.btn-primary:hover {
-  background: #9333ea;
-  border-color: #9333ea;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.controls-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.controls-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.controls-container::-webkit-scrollbar-track {
-  background: #1a1a1a;
-}
-
-.controls-container::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
-}
-
-.controls-container::-webkit-scrollbar-thumb:hover {
-  background: #444;
-}
-
-.section {
-  border-bottom: 1px solid #333;
-}
-
-.section-header {
-  padding: 16px 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #1a1a1a;
-  transition: background 0.2s;
-  user-select: none;
-}
-
-.section-header:hover {
-  background: #222;
-}
-
-.section-title {
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.section-arrow {
-  font-size: 12px;
-  transition: transform 0.2s;
-}
-
-.section.collapsed .section-arrow {
-  transform: rotate(-90deg);
-}
-
-.section-content {
-  padding: 16px 20px;
-  display: none;
-  animation: slideDown 0.2s ease;
-}
-
-.section:not(.collapsed) .section-content {
-  display: block;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.control-group {
-  margin-bottom: 20px;
-}
-
-.control-group:last-child {
-  margin-bottom: 0;
-}
-
-.control-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: #aaa;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.slider-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-input[type="range"] {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: #2a2a2a;
-  outline: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #a855f7;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #a855f7;
-  cursor: pointer;
-  border: none;
-}
-
-.slider-value {
-  min-width: 50px;
-  text-align: right;
-  font-size: 12px;
-  font-weight: 500;
-  color: #fff;
-  font-family: 'Courier New', monospace;
-}
-
-.color-picker-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: relative;
-}
-
-.color-preview {
-  width: 40px;
-  height: 32px;
-  border-radius: 6px;
-  border: 2px solid #333;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.color-preview:hover {
-  border-color: #555;
-}
-
-input[type="color"] {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-  left: 0;
-  top: 0;
-  width: 40px;
-  height: 32px;
-}
-
-.color-value {
-  flex: 1;
-  font-size: 12px;
-  font-family: 'Courier New', monospace;
-  color: #aaa;
-}
-
-select {
-  width: 100%;
-  padding: 10px 12px;
-  background: #2a2a2a;
-  border: 1px solid #333;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 13px;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s;
-}
-
-select:hover {
-  background: #333;
-  border-color: #444;
-}
-
-select:focus {
-  border-color: #a855f7;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-}
-
-input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #a855f7;
-}
-
-.checkbox-label {
-  font-size: 13px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.modal.active {
-  display: flex;
-}
-
-.modal-content {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  max-width: 90%;
-  max-height: 90%;
-  display: flex;
-  flex-direction: column;
-  width: 900px;
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #333;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-title {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.modal-close:hover {
-  background: #2a2a2a;
-  color: #fff;
-}
-
-.modal-body {
-  padding: 20px;
-  flex: 1;
-  overflow: auto;
-}
-
-.code-display {
-  background: #0d1117;
-  border: 1px solid #333;
-  border-radius: 6px;
-  padding: 16px;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  line-height: 1.6;
-  color: #e6edf3;
-  overflow: auto;
-  max-height: 60vh;
-  white-space: pre;
-}
-
-.modal-footer {
-  padding: 20px;
-  border-top: 1px solid #333;
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .canvas-container {
-    flex: 1;
-  }
-
-  .sidebar {
-    width: 100%;
-    height: 50vh;
-    max-height: 50vh;
-    border-left: none;
-    border-top: 1px solid #333;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    transform: translateY(0);
-  }
-
-  .sidebar.hidden {
-    transform: translateY(100%);
-  }
-
-  .sidebar-toggle {
-    position: absolute;
-    left: 50%;
-    top: -40px;
-    bottom: auto;
-    right: auto;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 40px;
-    border-radius: 8px 8px 0 0;
-    border: 1px solid #333;
-    border-bottom: none;
-    font-size: 0;
-  }
-  
-  .sidebar-toggle::before {
-    content: '▼';
-    font-size: 20px;
-  }
-
-  .sidebar.hidden .sidebar-toggle {
-    top: auto;
-    bottom: 100%;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    border-radius: 8px 8px 0 0;
-  }
-  
-  .sidebar.hidden .sidebar-toggle::before {
-    content: '▲';
-  }
-
-  .sidebar-header {
-    padding: 10px 12px;
-  }
-
-  .header-top {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    gap: 8px;
-  }
-
-  .sidebar-header h1 {
-    font-size: 15px;
-  }
-
-  .preset-control .control-label {
-    font-size: 9px;
-  }
-
-  .preset-control select {
-    width: 90px;
-    padding: 6px 8px;
-    font-size: 11px;
-  }
-
-  .control-label {
-    font-size: 10px;
-    margin-bottom: 6px;
-  }
-
-  select {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  .slider-value {
-    font-size: 11px;
-    min-width: 40px;
-  }
-
-  .action-buttons {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-  }
-
-  .btn {
-    padding: 7px 8px;
-    font-size: 10px;
-  }
-
-  .section-header {
-    padding: 10px 12px;
-  }
-
-  .section-title {
-    font-size: 12px;
-  }
-
-  .section-content {
-    padding: 10px 12px;
-  }
-
-  .control-group {
-    margin-bottom: 12px;
-  }
-
-  .controls-container {
-    overflow-y: scroll;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  input[type="number"] {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  .checkbox-label {
-    font-size: 12px;
-  }
-
-  .color-value {
-    font-size: 11px;
-  }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <title>Particles Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #111;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+
+    .sidebar {
+      width: 380px;
+      background: #1a1a1a;
+      border-left: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      transition: transform 0.3s ease;
+      z-index: 100;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(100%);
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      left: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 80px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 20px;
+      transition: background 0.2s;
+      z-index: 101;
+    }
+
+    .sidebar-toggle:hover {
+      background: #2a2a2a;
+    }
+
+    .sidebar.hidden .sidebar-toggle {
+      left: auto;
+      right: 100%;
+      border-radius: 8px 0 0 8px;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #333;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header h1 {
+      font-size: 20px;
+      margin-bottom: 0;
+      font-weight: 600;
+    }
+
+    .header-top {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preset-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .preset-control .control-label {
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .preset-control select {
+      flex: 1;
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      padding: 10px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid #333;
+    }
+
+    .btn:hover {
+      background: #333;
+      border-color: #444;
+    }
+
+    .btn.btn-primary {
+      background: #a855f7;
+      border-color: #a855f7;
+    }
+
+    .btn.btn-primary:hover {
+      background: #9333ea;
+      border-color: #9333ea;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .controls-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .controls-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .controls-container::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+
+    .controls-container::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    .controls-container::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+
+    .section {
+      border-bottom: 1px solid #333;
+    }
+
+    .section-header {
+      padding: 16px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1a1a1a;
+      transition: background 0.2s;
+      user-select: none;
+    }
+
+    .section-header:hover {
+      background: #222;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .section-arrow {
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+
+    .section.collapsed .section-arrow {
+      transform: rotate(-90deg);
+    }
+
+    .section-content {
+      padding: 16px 20px;
+      display: none;
+      animation: slideDown 0.2s ease;
+    }
+
+    .section:not(.collapsed) .section-content {
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: #2a2a2a;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #a855f7;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #a855f7;
+      cursor: pointer;
+      border: none;
+    }
+
+    .slider-value {
+      min-width: 50px;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+    }
+
+    .color-picker-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+
+    .color-preview {
+      width: 40px;
+      height: 32px;
+      border-radius: 6px;
+      border: 2px solid #333;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .color-preview:hover {
+      border-color: #555;
+    }
+
+    input[type="color"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      left: 0;
+      top: 0;
+      width: 40px;
+      height: 32px;
+    }
+
+    .color-value {
+      flex: 1;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      color: #aaa;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #2a2a2a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    select:hover {
+      background: #333;
+      border-color: #444;
+    }
+
+    select:focus {
+      border-color: #a855f7;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #a855f7;
+    }
+
+    .checkbox-label {
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      max-width: 90%;
+      max-height: 90%;
+      display: flex;
+      flex-direction: column;
+      width: 900px;
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #2a2a2a;
+      color: #fff;
+    }
+
+    .modal-body {
+      padding: 20px;
+      flex: 1;
+      overflow: auto;
+    }
+
+    .code-display {
+      background: #0d1117;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #e6edf3;
+      overflow: auto;
+      max-height: 60vh;
+      white-space: pre;
+    }
+
+    .modal-footer {
+      padding: 20px;
+      border-top: 1px solid #333;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .canvas-container {
+        flex: 1;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: 50vh;
+        max-height: 50vh;
+        border-left: none;
+        border-top: 1px solid #333;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        transform: translateY(0);
+      }
+
+      .sidebar.hidden {
+        transform: translateY(100%);
+      }
+
+      .sidebar-toggle {
+        position: absolute;
+        left: 50%;
+        top: -40px;
+        bottom: auto;
+        right: auto;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 40px;
+        border-radius: 8px 8px 0 0;
+        border: 1px solid #333;
+        border-bottom: none;
+        font-size: 0;
+      }
+
+      .sidebar-toggle::before {
+        content: '▼';
+        font-size: 20px;
+      }
+
+      .sidebar.hidden .sidebar-toggle {
+        top: auto;
+        bottom: 100%;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        border-radius: 8px 8px 0 0;
+      }
+
+      .sidebar.hidden .sidebar-toggle::before {
+        content: '▲';
+      }
+
+      .sidebar-header {
+        padding: 10px 12px;
+      }
+
+      .header-top {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        gap: 8px;
+      }
+
+      .sidebar-header h1 {
+        font-size: 15px;
+      }
+
+      .preset-control .control-label {
+        font-size: 9px;
+      }
+
+      .preset-control select {
+        width: 90px;
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      .control-label {
+        font-size: 10px;
+        margin-bottom: 6px;
+      }
+
+      select {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .slider-value {
+        font-size: 11px;
+        min-width: 40px;
+      }
+
+      .action-buttons {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+      }
+
+      .btn {
+        padding: 7px 8px;
+        font-size: 10px;
+      }
+
+      .section-header {
+        padding: 10px 12px;
+      }
+
+      .section-title {
+        font-size: 12px;
+      }
+
+      .section-content {
+        padding: 10px 12px;
+      }
+
+      .control-group {
+        margin-bottom: 12px;
+      }
+
+      .controls-container {
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      input[type="number"] {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .checkbox-label {
+        font-size: 12px;
+      }
+
+      .color-value {
+        font-size: 11px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="container">
-  <div class="canvas-container">
-    <canvas id="canvas"></canvas>
-  </div>
-  
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-toggle" id="sidebarToggle">◀</div>
-    
-    <div class="sidebar-header">
-      <div class="header-top">
-        <h1>Particles Generator</h1>
-        
-        <div class="preset-control">
-          <label class="control-label">Preset</label>
-          <select id="presetSelect">
-            <option value="confetti">Confetti</option>
-            <option value="snow">Snow</option>
-            <option value="rain">Rain</option>
-            <option value="stars">Stars</option>
-            <option value="fireflies">Fireflies</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="action-buttons">
-        <button class="btn btn-primary" id="playBtn">▶ Play</button>
-        <button class="btn" id="pauseBtn" disabled>⏸ Pause</button>
-        <button class="btn" id="savePngBtn">💾 PNG</button>
-        <button class="btn" id="saveHtmlBtn">📄 Save .HTML</button>
-        <button class="btn" id="showCodeBtn">👁 Show Code</button>
-        <button class="btn" id="resetBtn">🔄 Reset</button>
-      </div>
+  <div class="container">
+    <div class="canvas-container">
+      <canvas id="canvas"></canvas>
     </div>
-    
-    <div class="controls-container">
-      <div class="section" id="sectionParticles">
-        <div class="section-header">
-          <span class="section-title">Particles</span>
-          <span class="section-arrow">▼</span>
-        </div>
-        <div class="section-content">
-          <div class="control-group">
-            <label class="control-label">Count</label>
-            <div class="slider-container">
-              <input type="range" id="countSlider" min="50" max="2000" value="800" step="50">
-              <span class="slider-value" id="countValue">800</span>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Min Size</label>
-            <div class="slider-container">
-              <input type="range" id="minSizeSlider" min="1" max="10" value="2" step="0.5">
-              <span class="slider-value" id="minSizeValue">2</span>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Max Size</label>
-            <div class="slider-container">
-              <input type="range" id="maxSizeSlider" min="2" max="20" value="6" step="0.5">
-              <span class="slider-value" id="maxSizeValue">6</span>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Shape</label>
-            <select id="shapeSelect">
-              <option value="circle">Circle</option>
-              <option value="square">Square</option>
-              <option value="rectangle">Rectangle</option>
-              <option value="triangle">Triangle</option>
-              <option value="star">Star</option>
-              <option value="snowflake">Snowflake</option>
+
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-toggle" id="sidebarToggle">◀</div>
+
+      <div class="sidebar-header">
+        <div class="header-top">
+          <h1>Particles Generator</h1>
+
+          <div class="preset-control">
+            <label class="control-label">Preset</label>
+            <select id="presetSelect">
+              <option value="confetti">Confetti</option>
+              <option value="snow">Snow</option>
+              <option value="rain">Rain</option>
+              <option value="stars">Stars</option>
+              <option value="fireflies">Fireflies</option>
             </select>
           </div>
         </div>
-      </div>
-      
-      <div class="section collapsed" id="sectionPhysics">
-        <div class="section-header">
-          <span class="section-title">Physics</span>
-          <span class="section-arrow">▼</span>
-        </div>
-        <div class="section-content">
-          <div class="control-group">
-            <label class="control-label">Speed</label>
-            <div class="slider-container">
-              <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1">
-              <span class="slider-value" id="speedValue">1.0</span>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Gravity</label>
-            <div class="slider-container">
-              <input type="range" id="gravitySlider" min="-1" max="10" step="0.1" value="0.2">
-              <span class="slider-value" id="gravityValue">0.2</span>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Wind</label>
-            <div class="slider-container">
-              <input type="range" id="windSlider" min="-2" max="2" step="0.1" value="0">
-              <span class="slider-value" id="windValue">0.0</span>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Spawn Speed</label>
-            <div class="slider-container">
-              <input type="range" id="spawnSpeedSlider" min="0" max="10" step="0.5" value="1">
-              <span class="slider-value" id="spawnSpeedValue">1.0</span>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Turbulence</label>
-            <div class="slider-container">
-              <input type="range" id="turbulenceSlider" min="0" max="5" step="0.1" value="0.8">
-              <span class="slider-value" id="turbulenceValue">0.8</span>
-            </div>
-          </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="playBtn">▶ Play</button>
+          <button class="btn" id="pauseBtn" disabled>⏸ Pause</button>
+          <button class="btn" id="savePngBtn">💾 PNG</button>
+          <button class="btn" id="saveHtmlBtn">📄 Save .HTML</button>
+          <button class="btn" id="showCodeBtn">👁 Show Code</button>
+          <button class="btn" id="resetBtn">🔄 Reset</button>
         </div>
       </div>
-      
-      <div class="section collapsed" id="sectionBehavior">
-        <div class="section-header">
-          <span class="section-title">Behavior</span>
-          <span class="section-arrow">▼</span>
-        </div>
-        <div class="section-content">
-          <div class="control-group">
-            <label class="control-label">Fade Mode</label>
-            <select id="fadeModeSelect">
-              <option value="none">None</option>
-              <option value="always">Always</option>
-              <option value="exit">Exit Only</option>
-            </select>
+
+      <div class="controls-container">
+        <div class="section" id="sectionParticles">
+          <div class="section-header">
+            <span class="section-title">Particles</span>
+            <span class="section-arrow">▼</span>
           </div>
-          
-          <div class="control-group">
-            <label class="control-label">Fade Speed</label>
-            <div class="slider-container">
-              <input type="range" id="fadeSpeedSlider" min="0.001" max="0.05" step="0.001" value="0.03">
-              <span class="slider-value" id="fadeSpeedValue">0.030</span>
+          <div class="section-content">
+            <div class="control-group">
+              <label class="control-label">Count</label>
+              <div class="slider-container">
+                <input type="range" id="countSlider" min="50" max="2000" value="800" step="50">
+                <span class="slider-value" id="countValue">800</span>
+              </div>
             </div>
-          </div>
-          
-          <div class="control-group">
-            <div class="checkbox-container">
-              <input type="checkbox" id="rotationCheck">
-              <label class="checkbox-label" for="rotationCheck">Rotation</label>
+
+            <div class="control-group">
+              <label class="control-label">Min Size</label>
+              <div class="slider-container">
+                <input type="range" id="minSizeSlider" min="1" max="10" value="2" step="0.5">
+                <span class="slider-value" id="minSizeValue">2</span>
+              </div>
             </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Angle</label>
-            <div class="slider-container">
-              <input type="range" id="angleSlider" min="0" max="360" step="5" value="0">
-              <span class="slider-value" id="angleValue">0°</span>
+
+            <div class="control-group">
+              <label class="control-label">Max Size</label>
+              <div class="slider-container">
+                <input type="range" id="maxSizeSlider" min="2" max="20" value="6" step="0.5">
+                <span class="slider-value" id="maxSizeValue">6</span>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="section collapsed" id="sectionMouse">
-        <div class="section-header">
-          <span class="section-title">Mouse</span>
-          <span class="section-arrow">▼</span>
-        </div>
-        <div class="section-content">
-          <div class="control-group">
-            <div class="checkbox-container">
-              <input type="checkbox" id="mouseTrackingCheck">
-              <label class="checkbox-label" for="mouseTrackingCheck">Mouse Tracking</label>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Mouse Influence</label>
-            <div class="slider-container">
-              <input type="range" id="mouseInfluenceSlider" min="0" max="50" step="1" value="8">
-              <span class="slider-value" id="mouseInfluenceValue">8</span>
+
+            <div class="control-group">
+              <label class="control-label">Shape</label>
+              <select id="shapeSelect">
+                <option value="circle">Circle</option>
+                <option value="square">Square</option>
+                <option value="rectangle">Rectangle</option>
+                <option value="triangle">Triangle</option>
+                <option value="star">Star</option>
+                <option value="snowflake">Snowflake</option>
+              </select>
             </div>
           </div>
         </div>
-      </div>
-      
-      <div class="section collapsed" id="sectionColors">
-        <div class="section-header">
-          <span class="section-title">Colors</span>
-          <span class="section-arrow">▼</span>
+
+        <div class="section collapsed" id="sectionPhysics">
+          <div class="section-header">
+            <span class="section-title">Physics</span>
+            <span class="section-arrow">▼</span>
+          </div>
+          <div class="section-content">
+            <div class="control-group">
+              <label class="control-label">Speed</label>
+              <div class="slider-container">
+                <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1">
+                <span class="slider-value" id="speedValue">1.0</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Gravity</label>
+              <div class="slider-container">
+                <input type="range" id="gravitySlider" min="-1" max="10" step="0.1" value="0.2">
+                <span class="slider-value" id="gravityValue">0.2</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Wind</label>
+              <div class="slider-container">
+                <input type="range" id="windSlider" min="-2" max="2" step="0.1" value="0">
+                <span class="slider-value" id="windValue">0.0</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Spawn Speed</label>
+              <div class="slider-container">
+                <input type="range" id="spawnSpeedSlider" min="0" max="10" step="0.5" value="1">
+                <span class="slider-value" id="spawnSpeedValue">1.0</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Turbulence</label>
+              <div class="slider-container">
+                <input type="range" id="turbulenceSlider" min="0" max="5" step="0.1" value="0.8">
+                <span class="slider-value" id="turbulenceValue">0.8</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="section-content">
-          <div class="control-group">
-            <label class="control-label">Color 1</label>
-            <div class="color-picker-container">
-              <div class="color-preview" id="color1Preview" style="background: #55476A;"></div>
-              <input type="color" id="color1Picker" value="#55476A">
-              <span class="color-value" id="color1Value">#55476A</span>
+
+        <div class="section collapsed" id="sectionBehavior">
+          <div class="section-header">
+            <span class="section-title">Behavior</span>
+            <span class="section-arrow">▼</span>
+          </div>
+          <div class="section-content">
+            <div class="control-group">
+              <label class="control-label">Fade Mode</label>
+              <select id="fadeModeSelect">
+                <option value="none">None</option>
+                <option value="always">Always</option>
+                <option value="exit">Exit Only</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Fade Speed</label>
+              <div class="slider-container">
+                <input type="range" id="fadeSpeedSlider" min="0.001" max="0.05" step="0.001" value="0.03">
+                <span class="slider-value" id="fadeSpeedValue">0.030</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="checkbox-container">
+                <input type="checkbox" id="rotationCheck">
+                <label class="checkbox-label" for="rotationCheck">Rotation</label>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Angle</label>
+              <div class="slider-container">
+                <input type="range" id="angleSlider" min="0" max="360" step="5" value="0">
+                <span class="slider-value" id="angleValue">0°</span>
+              </div>
             </div>
           </div>
-          
-          <div class="control-group">
-            <label class="control-label">Color 2</label>
-            <div class="color-picker-container">
-              <div class="color-preview" id="color2Preview" style="background: #AE3D63;"></div>
-              <input type="color" id="color2Picker" value="#AE3D63">
-              <span class="color-value" id="color2Value">#AE3D63</span>
+        </div>
+
+        <div class="section collapsed" id="sectionMouse">
+          <div class="section-header">
+            <span class="section-title">Mouse</span>
+            <span class="section-arrow">▼</span>
+          </div>
+          <div class="section-content">
+            <div class="control-group">
+              <div class="checkbox-container">
+                <input type="checkbox" id="mouseTrackingCheck">
+                <label class="checkbox-label" for="mouseTrackingCheck">Mouse Tracking</label>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Mouse Influence</label>
+              <div class="slider-container">
+                <input type="range" id="mouseInfluenceSlider" min="0" max="50" step="1" value="8">
+                <span class="slider-value" id="mouseInfluenceValue">8</span>
+              </div>
             </div>
           </div>
-          
-          <div class="control-group">
-            <label class="control-label">Color 3</label>
-            <div class="color-picker-container">
-              <div class="color-preview" id="color3Preview" style="background: #DB3853;"></div>
-              <input type="color" id="color3Picker" value="#DB3853">
-              <span class="color-value" id="color3Value">#DB3853</span>
-            </div>
+        </div>
+
+        <div class="section collapsed" id="sectionColors">
+          <div class="section-header">
+            <span class="section-title">Colors</span>
+            <span class="section-arrow">▼</span>
           </div>
-          
-          <div class="control-group">
-            <label class="control-label">Color 4</label>
-            <div class="color-picker-container">
-              <div class="color-preview" id="color4Preview" style="background: #F45C44;"></div>
-              <input type="color" id="color4Picker" value="#F45C44">
-              <span class="color-value" id="color4Value">#F45C44</span>
+          <div class="section-content">
+            <div class="control-group">
+              <label class="control-label">Color 1</label>
+              <div class="color-picker-container">
+                <div class="color-preview" id="color1Preview" style="background: #55476A;"></div>
+                <input type="color" id="color1Picker" value="#55476A">
+                <span class="color-value" id="color1Value">#55476A</span>
+              </div>
             </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Color 5</label>
-            <div class="color-picker-container">
-              <div class="color-preview" id="color5Preview" style="background: #F8B646;"></div>
-              <input type="color" id="color5Picker" value="#F8B646">
-              <span class="color-value" id="color5Value">#F8B646</span>
+
+            <div class="control-group">
+              <label class="control-label">Color 2</label>
+              <div class="color-picker-container">
+                <div class="color-preview" id="color2Preview" style="background: #AE3D63;"></div>
+                <input type="color" id="color2Picker" value="#AE3D63">
+                <span class="color-value" id="color2Value">#AE3D63</span>
+              </div>
             </div>
-          </div>
-          
-          <div class="control-group">
-            <label class="control-label">Background</label>
-            <div class="color-picker-container">
-              <div class="color-preview" id="bgColorPreview" style="background: #000000;"></div>
-              <input type="color" id="bgColorPicker" value="#000000">
-              <span class="color-value" id="bgColorValue">#000000</span>
+
+            <div class="control-group">
+              <label class="control-label">Color 3</label>
+              <div class="color-picker-container">
+                <div class="color-preview" id="color3Preview" style="background: #DB3853;"></div>
+                <input type="color" id="color3Picker" value="#DB3853">
+                <span class="color-value" id="color3Value">#DB3853</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Color 4</label>
+              <div class="color-picker-container">
+                <div class="color-preview" id="color4Preview" style="background: #F45C44;"></div>
+                <input type="color" id="color4Picker" value="#F45C44">
+                <span class="color-value" id="color4Value">#F45C44</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Color 5</label>
+              <div class="color-picker-container">
+                <div class="color-preview" id="color5Preview" style="background: #F8B646;"></div>
+                <input type="color" id="color5Picker" value="#F8B646">
+                <span class="color-value" id="color5Value">#F8B646</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Background</label>
+              <div class="color-picker-container">
+                <div class="color-preview" id="bgColorPreview" style="background: #000000;"></div>
+                <input type="color" id="bgColorPicker" value="#000000">
+                <span class="color-value" id="bgColorValue">#000000</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="modal" id="codeModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 class="modal-title">Generated Code</h2>
-      <button class="modal-close" id="closeModalBtn">×</button>
-    </div>
-    <div class="modal-body">
-      <pre class="code-display" id="codeDisplay"></pre>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" id="copyCodeBtn">Copy Code</button>
-      <button class="btn btn-primary" id="closeModalBtn2">Close</button>
+  <div class="modal" id="codeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Generated Code</h2>
+        <button class="modal-close" id="closeModalBtn">×</button>
+      </div>
+      <div class="modal-body">
+        <pre class="code-display" id="codeDisplay"></pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="copyCodeBtn">Copy Code</button>
+        <button class="btn btn-primary" id="closeModalBtn2">Close</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-const PI2 = Math.PI * 2;
-const SPAWN_MARGIN = 100;
-const SPAWN_WIDTH_MULTIPLIER = 1.2;
-const SPAWN_WIDTH_OFFSET = 0.1;
-const PHYSICS_DELTA = 0.05;
-const MOUSE_INFLUENCE_FACTOR = 0.01;
-const BOUNDARY_MARGIN_MULTIPLIER = 4;
-const FADE_EXIT_THRESHOLD = 50;
-const STATIC_GRAVITY_THRESHOLD = 0.15;
+  <script>
+    const PI2 = Math.PI * 2;
+    const SPAWN_MARGIN = 100;
+    const SPAWN_WIDTH_MULTIPLIER = 1.2;
+    const SPAWN_WIDTH_OFFSET = 0.1;
+    const PHYSICS_DELTA = 0.05;
+    const MOUSE_INFLUENCE_FACTOR = 0.01;
+    const BOUNDARY_MARGIN_MULTIPLIER = 4;
+    const FADE_EXIT_THRESHOLD = 50;
+    const STATIC_GRAVITY_THRESHOLD = 0.15;
 
-const SHAPE_PROPORTIONS = {
-  rectangle: { widthRatio: 0.3, heightRatio: 2 },
-  triangle: { heightRatio: 2, baseRatio: 0.5 },
-  star: { innerRatio: 0.5, spikes: 5 },
-  snowflake: { branchCount: 6, branchPoint: 0.6, sideLength: 0.3, lineWidthRatio: 0.15 }
-};
+    const SHAPE_PROPORTIONS = {
+      rectangle: { widthRatio: 0.3, heightRatio: 2 },
+      triangle: { heightRatio: 2, baseRatio: 0.5 },
+      star: { innerRatio: 0.5, spikes: 5 },
+      snowflake: { branchCount: 6, branchPoint: 0.6, sideLength: 0.3, lineWidthRatio: 0.15 }
+    };
 
-const CONFIG = {
-  particles: {
-    count: 800,
-    minSize: 2,
-    maxSize: 6,
-    shape: 'circle',
-    angle: 0
-  },
-  physics: {
-    gravity: 0.2,
-    wind: 0,
-    spawnSpeed: 1,
-    turbulence: 0.8,
-    speed: 1
-  },
-  behavior: {
-    fadeSpeed: 0.03,
-    fadeMode: 'none',
-    rotation: false
-  },
-  mouse: {
-    influence: 8,
-    tracking: false
-  },
-  colors: {
-    palette: ['#55476A', '#AE3D63', '#DB3853', '#F45C44', '#F8B646'],
-    background: '#000000'
-  }
-};
-
-const ORIGINAL_CONFIG = JSON.parse(JSON.stringify(CONFIG));
-
-const PRESETS = {
-  confetti: {
-    particles: { count: 800, minSize: 2, maxSize: 6, shape: 'circle', angle: 0 },
-    physics: { gravity: 0.2, wind: 0.2, spawnSpeed: 1, turbulence: 0.8, speed: 1 },
-    behavior: { fadeSpeed: 0.03, fadeMode: 'none', rotation: false },
-    mouse: { influence: 8, tracking: false },
-    colors: { palette: ['#55476A', '#AE3D63', '#DB3853', '#F45C44', '#F8B646'], background: '#000000' }
-  },
-  snow: {
-    particles: { count: 600, minSize: 2, maxSize: 5, shape: 'snowflake', angle: 0 },
-    physics: { gravity: 0.15, wind: 0.3, spawnSpeed: 0.5, turbulence: 0.4, speed: 0.6 },
-    behavior: { fadeSpeed: 0.01, fadeMode: 'none', rotation: false },
-    mouse: { influence: 3, tracking: false },
-    colors: { palette: ['#ffffff', '#e0f2fe', '#dbeafe', '#bfdbfe', '#93c5fd'], background: '#0a1929' }
-  },
-  rain: {
-    particles: { count: 400, minSize: 1, maxSize: 3, shape: 'rectangle', angle: 0 },
-    physics: { gravity: 5, wind: 1, spawnSpeed: 3, turbulence: 0.1, speed: 2.5 },
-    behavior: { fadeSpeed: 0.02, fadeMode: 'none', rotation: false },
-    mouse: { influence: 0, tracking: false },
-    colors: { palette: ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'], background: '#111827' }
-  },
-  stars: {
-    particles: { count: 800, minSize: 1, maxSize: 4, shape: 'star', angle: 0 },
-    physics: { gravity: 0, wind: 0, spawnSpeed: 0.1, turbulence: 0.02, speed: 0.1 },
-    behavior: { fadeSpeed: 0.015, fadeMode: 'always', rotation: false },
-    mouse: { influence: 0, tracking: false },
-    colors: { palette: ['#fbbf24', '#fde047', '#fef08a', '#fefce8', '#fffbeb'], background: '#000000' }
-  },
-  fireflies: {
-    particles: { count: 250, minSize: 3, maxSize: 6, shape: 'circle', angle: 0 },
-    physics: { gravity: 0, wind: 0, spawnSpeed: 1.5, turbulence: 1.5, speed: 0.8 },
-    behavior: { fadeSpeed: 0.03, fadeMode: 'always', rotation: false },
-    mouse: { influence: 0, tracking: false },
-    colors: { palette: ['#fde047', '#fef08a', '#a3e635', '#bef264', '#d9f99d'], background: '#0f172a' }
-  }
-};
-
-const state = {
-  isPlaying: true,
-  canvas: null,
-  ctx: null,
-  particles: [],
-  mouseX: 0.5,
-  mouseY: 0.5,
-  animationId: null
-};
-
-class Particle {
-  constructor(canvas, firstTime = false) {
-    this.canvas = canvas;
-    this.reset(firstTime);
-  }
-  
-  reset(firstTime = false, canvasWidth = null, canvasHeight = null) {
-    const w = canvasWidth || this.canvas.width;
-    const h = canvasHeight || this.canvas.height;
-    
-    const { minSize, maxSize, angle } = CONFIG.particles;
-    this.shape = CONFIG.particles.shape;
-    this.opacity = CONFIG.behavior.fadeMode === 'none' ? 1 : 0;
-    this.fadeDirection = 1;
-    this.fadeSpeed = CONFIG.behavior.fadeSpeed * (Math.random() * 2 + 1);
-    
-    const isStaticMode = Math.abs(CONFIG.physics.gravity) < STATIC_GRAVITY_THRESHOLD;
-    this.size = minSize + Math.random() * (maxSize - minSize);
-    this.color = CONFIG.colors.palette[Math.floor(Math.random() * CONFIG.colors.palette.length)];
-    
-    if (isStaticMode) {
-      this.x = Math.random() * w;
-      this.y = Math.random() * h;
-      this.vx = (Math.random() - 0.5) * CONFIG.physics.spawnSpeed * 0.5;
-      this.vy = (Math.random() - 0.5) * CONFIG.physics.spawnSpeed * 0.5;
-    } else {
-      if (firstTime) {
-        this.x = Math.random() * w;
-        this.y = Math.random() * h;
-      } else {
-        this.x = Math.random() * w * SPAWN_WIDTH_MULTIPLIER - w * SPAWN_WIDTH_OFFSET;
-        this.y = -Math.random() * SPAWN_MARGIN;
+    const CONFIG = {
+      particles: {
+        count: 800,
+        minSize: 2,
+        maxSize: 6,
+        shape: 'circle',
+        angle: 0
+      },
+      physics: {
+        gravity: 0.2,
+        wind: 0,
+        spawnSpeed: 1,
+        turbulence: 0.8,
+        speed: 1
+      },
+      behavior: {
+        fadeSpeed: 0.03,
+        fadeMode: 'none',
+        rotation: false
+      },
+      mouse: {
+        influence: 8,
+        tracking: false
+      },
+      colors: {
+        palette: ['#55476A', '#AE3D63', '#DB3853', '#F45C44', '#F8B646'],
+        background: '#000000'
       }
-      this.vx = (Math.random() - 0.5) * CONFIG.physics.spawnSpeed;
-      this.vy = this.size * 0.3 + Math.random() * Math.abs(CONFIG.physics.gravity) * 0.5;
-    }
-    
-    this.rotation = angle * (Math.PI / 180);
-    this.rotationSpeed = (Math.random() - 0.5) * 0.1;
-  }
+    };
 
-  update(canvasWidth, canvasHeight, mouseX, mouseY) {
-    const speedMult = CONFIG.physics.speed;
-    const mouseVx = CONFIG.mouse.tracking ? 
-      (mouseX * canvasWidth - this.x) / canvasWidth * CONFIG.mouse.influence : 0;
-    
-    this.vx += mouseVx * MOUSE_INFLUENCE_FACTOR * speedMult;
-    this.vx += (Math.random() - 0.5) * CONFIG.physics.turbulence * PHYSICS_DELTA;
-    this.vx += CONFIG.physics.wind * PHYSICS_DELTA;
-    this.vy += CONFIG.physics.gravity * PHYSICS_DELTA * speedMult;
-    
-    this.x += this.vx * speedMult;
-    this.y += this.vy * speedMult;
-    
-    if (CONFIG.behavior.rotation) {
-      this.rotation += this.rotationSpeed * speedMult;
-    }
-    
-    if (CONFIG.behavior.fadeMode === 'always') {
-      this.opacity += this.fadeSpeed * this.fadeDirection;
-      if (this.opacity >= 1) {
-        this.opacity = 1;
-        this.fadeDirection = -1;
+    const ORIGINAL_CONFIG = JSON.parse(JSON.stringify(CONFIG));
+
+    const PRESETS = {
+      confetti: {
+        particles: { count: 800, minSize: 2, maxSize: 6, shape: 'circle', angle: 0 },
+        physics: { gravity: 0.2, wind: 0.2, spawnSpeed: 1, turbulence: 0.8, speed: 1 },
+        behavior: { fadeSpeed: 0.03, fadeMode: 'none', rotation: false },
+        mouse: { influence: 8, tracking: false },
+        colors: { palette: ['#55476A', '#AE3D63', '#DB3853', '#F45C44', '#F8B646'], background: '#000000' }
+      },
+      snow: {
+        particles: { count: 600, minSize: 2, maxSize: 5, shape: 'snowflake', angle: 0 },
+        physics: { gravity: 0.15, wind: 0.3, spawnSpeed: 0.5, turbulence: 0.4, speed: 0.6 },
+        behavior: { fadeSpeed: 0.01, fadeMode: 'none', rotation: false },
+        mouse: { influence: 3, tracking: false },
+        colors: { palette: ['#ffffff', '#e0f2fe', '#dbeafe', '#bfdbfe', '#93c5fd'], background: '#0a1929' }
+      },
+      rain: {
+        particles: { count: 400, minSize: 1, maxSize: 3, shape: 'rectangle', angle: 0 },
+        physics: { gravity: 5, wind: 1, spawnSpeed: 3, turbulence: 0.1, speed: 2.5 },
+        behavior: { fadeSpeed: 0.02, fadeMode: 'none', rotation: false },
+        mouse: { influence: 0, tracking: false },
+        colors: { palette: ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'], background: '#111827' }
+      },
+      stars: {
+        particles: { count: 800, minSize: 1, maxSize: 4, shape: 'star', angle: 0 },
+        physics: { gravity: 0, wind: 0, spawnSpeed: 0.1, turbulence: 0.02, speed: 0.1 },
+        behavior: { fadeSpeed: 0.015, fadeMode: 'always', rotation: false },
+        mouse: { influence: 0, tracking: false },
+        colors: { palette: ['#fbbf24', '#fde047', '#fef08a', '#fefce8', '#fffbeb'], background: '#000000' }
+      },
+      fireflies: {
+        particles: { count: 250, minSize: 3, maxSize: 6, shape: 'circle', angle: 0 },
+        physics: { gravity: 0, wind: 0, spawnSpeed: 1.5, turbulence: 1.5, speed: 0.8 },
+        behavior: { fadeSpeed: 0.03, fadeMode: 'always', rotation: false },
+        mouse: { influence: 0, tracking: false },
+        colors: { palette: ['#fde047', '#fef08a', '#a3e635', '#bef264', '#d9f99d'], background: '#0f172a' }
       }
-      if (this.opacity <= 0) {
-        this.reset(false, canvasWidth, canvasHeight);
+    };
+
+    const state = {
+      isPlaying: true,
+      canvas: null,
+      ctx: null,
+      particles: [],
+      mouseX: 0.5,
+      mouseY: 0.5,
+      animationId: null
+    };
+
+    class Particle {
+      constructor(canvas, firstTime = false) {
+        this.canvas = canvas;
+        this.reset(firstTime);
       }
-    } else if (CONFIG.behavior.fadeMode === 'exit') {
-      if (this.y > canvasHeight - FADE_EXIT_THRESHOLD || this.y < FADE_EXIT_THRESHOLD) {
-        this.opacity -= this.fadeSpeed * 2;
-      } else if (this.opacity < 1) {
-        this.opacity += this.fadeSpeed;
+
+      reset(firstTime = false, canvasWidth = null, canvasHeight = null) {
+        const w = canvasWidth || this.canvas.width;
+        const h = canvasHeight || this.canvas.height;
+
+        const { minSize, maxSize, angle } = CONFIG.particles;
+        this.shape = CONFIG.particles.shape;
+        this.opacity = CONFIG.behavior.fadeMode === 'none' ? 1 : 0;
+        this.fadeDirection = 1;
+        this.fadeSpeed = CONFIG.behavior.fadeSpeed * (Math.random() * 2 + 1);
+
+        const isStaticMode = Math.abs(CONFIG.physics.gravity) < STATIC_GRAVITY_THRESHOLD;
+        this.size = minSize + Math.random() * (maxSize - minSize);
+        this.color = CONFIG.colors.palette[Math.floor(Math.random() * CONFIG.colors.palette.length)];
+
+        if (isStaticMode) {
+          this.x = Math.random() * w;
+          this.y = Math.random() * h;
+          this.vx = (Math.random() - 0.5) * CONFIG.physics.spawnSpeed * 0.5;
+          this.vy = (Math.random() - 0.5) * CONFIG.physics.spawnSpeed * 0.5;
+        } else {
+          if (firstTime) {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+          } else {
+            this.x = Math.random() * w * SPAWN_WIDTH_MULTIPLIER - w * SPAWN_WIDTH_OFFSET;
+            this.y = -Math.random() * SPAWN_MARGIN;
+          }
+          this.vx = (Math.random() - 0.5) * CONFIG.physics.spawnSpeed;
+          this.vy = this.size * 0.3 + Math.random() * Math.abs(CONFIG.physics.gravity) * 0.5;
+        }
+
+        this.rotation = angle * (Math.PI / 180);
+        this.rotationSpeed = (Math.random() - 0.5) * 0.1;
       }
-      if (this.opacity <= 0) {
-        this.reset(false, canvasWidth, canvasHeight);
+
+      update(canvasWidth, canvasHeight, mouseX, mouseY) {
+        const speedMult = CONFIG.physics.speed;
+        const mouseVx = CONFIG.mouse.tracking ?
+          (mouseX * canvasWidth - this.x) / canvasWidth * CONFIG.mouse.influence : 0;
+
+        this.vx += mouseVx * MOUSE_INFLUENCE_FACTOR * speedMult;
+        this.vx += (Math.random() - 0.5) * CONFIG.physics.turbulence * PHYSICS_DELTA;
+        this.vx += CONFIG.physics.wind * PHYSICS_DELTA;
+        this.vy += CONFIG.physics.gravity * PHYSICS_DELTA * speedMult;
+
+        this.x += this.vx * speedMult;
+        this.y += this.vy * speedMult;
+
+        if (CONFIG.behavior.rotation) {
+          this.rotation += this.rotationSpeed * speedMult;
+        }
+
+        if (CONFIG.behavior.fadeMode === 'always') {
+          this.opacity += this.fadeSpeed * this.fadeDirection;
+          if (this.opacity >= 1) {
+            this.opacity = 1;
+            this.fadeDirection = -1;
+          }
+          if (this.opacity <= 0) {
+            this.reset(false, canvasWidth, canvasHeight);
+          }
+        } else if (CONFIG.behavior.fadeMode === 'exit') {
+          if (this.y > canvasHeight - FADE_EXIT_THRESHOLD || this.y < FADE_EXIT_THRESHOLD) {
+            this.opacity -= this.fadeSpeed * 2;
+          } else if (this.opacity < 1) {
+            this.opacity += this.fadeSpeed;
+          }
+          if (this.opacity <= 0) {
+            this.reset(false, canvasWidth, canvasHeight);
+          }
+        }
+
+        if (this.y > canvasHeight + SPAWN_MARGIN || this.y < -SPAWN_MARGIN) {
+          this.reset(false, canvasWidth, canvasHeight);
+        }
+
+        const boundaryMargin = this.size * BOUNDARY_MARGIN_MULTIPLIER;
+        if (this.x < -boundaryMargin) {
+          this.x = canvasWidth + boundaryMargin;
+        } else if (this.x > canvasWidth + boundaryMargin) {
+          this.x = -boundaryMargin;
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = this.color;
+
+        if (this.shape === 'circle') {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, PI2);
+          ctx.fill();
+        } else if (this.shape === 'square') {
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.rotation);
+          ctx.fillRect(-this.size, -this.size, this.size * 2, this.size * 2);
+        } else if (this.shape === 'rectangle') {
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.rotation);
+          const { widthRatio, heightRatio } = SHAPE_PROPORTIONS.rectangle;
+          ctx.fillRect(-this.size * widthRatio, -this.size * heightRatio,
+            this.size * widthRatio * 2, this.size * heightRatio * 2);
+        } else if (this.shape === 'triangle') {
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.rotation);
+          const { heightRatio, baseRatio } = SHAPE_PROPORTIONS.triangle;
+          ctx.beginPath();
+          ctx.moveTo(0, -this.size * heightRatio);
+          ctx.lineTo(-this.size * baseRatio, this.size);
+          ctx.lineTo(this.size * baseRatio, this.size);
+          ctx.closePath();
+          ctx.fill();
+        } else if (this.shape === 'star') {
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.rotation);
+          this.drawStar(ctx, 0, 0, SHAPE_PROPORTIONS.star.spikes, this.size, this.size * SHAPE_PROPORTIONS.star.innerRatio);
+        } else if (this.shape === 'snowflake') {
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.rotation);
+          this.drawSnowflake(ctx, this.size);
+        }
+
+        ctx.restore();
+      }
+
+      drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+        let rot = Math.PI / 2 * 3;
+        let x = cx;
+        let y = cy;
+        const step = Math.PI / spikes;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius);
+
+        for (let i = 0; i < spikes; i++) {
+          x = cx + Math.cos(rot) * outerRadius;
+          y = cy + Math.sin(rot) * outerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+        }
+
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      drawSnowflake(ctx, size) {
+        ctx.strokeStyle = ctx.fillStyle;
+        ctx.lineWidth = size * SHAPE_PROPORTIONS.snowflake.lineWidthRatio;
+        ctx.lineCap = 'round';
+
+        const { branchCount, branchPoint, sideLength } = SHAPE_PROPORTIONS.snowflake;
+
+        ctx.beginPath();
+        for (let i = 0; i < branchCount; i++) {
+          const angle = (Math.PI / 3) * i;
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-sin * size, -cos * size);
+
+          const branchY = -cos * size * branchPoint;
+          const branchX = -sin * size * branchPoint;
+          ctx.moveTo(branchX, branchY);
+          ctx.lineTo(
+            branchX - sin * size * sideLength - cos * size * (1 - branchPoint),
+            branchY - cos * size * sideLength + sin * size * (1 - branchPoint)
+          );
+
+          ctx.moveTo(branchX, branchY);
+          ctx.lineTo(
+            branchX + sin * size * sideLength - cos * size * (1 - branchPoint),
+            branchY + cos * size * sideLength + sin * size * (1 - branchPoint)
+          );
+        }
+        ctx.stroke();
       }
     }
-    
-    if (this.y > canvasHeight + SPAWN_MARGIN || this.y < -SPAWN_MARGIN) {
-      this.reset(false, canvasWidth, canvasHeight);
-    }
-    
-    const boundaryMargin = this.size * BOUNDARY_MARGIN_MULTIPLIER;
-    if (this.x < -boundaryMargin) {
-      this.x = canvasWidth + boundaryMargin;
-    } else if (this.x > canvasWidth + boundaryMargin) {
-      this.x = -boundaryMargin;
-    }
-  }
 
-  draw(ctx) {
-    ctx.save();
-    ctx.globalAlpha = this.opacity;
-    ctx.fillStyle = this.color;
-    
-    if (this.shape === 'circle') {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, PI2);
-      ctx.fill();
-    } else if (this.shape === 'square') {
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      ctx.fillRect(-this.size, -this.size, this.size * 2, this.size * 2);
-    } else if (this.shape === 'rectangle') {
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      const { widthRatio, heightRatio } = SHAPE_PROPORTIONS.rectangle;
-      ctx.fillRect(-this.size * widthRatio, -this.size * heightRatio, 
-                   this.size * widthRatio * 2, this.size * heightRatio * 2);
-    } else if (this.shape === 'triangle') {
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      const { heightRatio, baseRatio } = SHAPE_PROPORTIONS.triangle;
-      ctx.beginPath();
-      ctx.moveTo(0, -this.size * heightRatio);
-      ctx.lineTo(-this.size * baseRatio, this.size);
-      ctx.lineTo(this.size * baseRatio, this.size);
-      ctx.closePath();
-      ctx.fill();
-    } else if (this.shape === 'star') {
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      this.drawStar(ctx, 0, 0, SHAPE_PROPORTIONS.star.spikes, this.size, this.size * SHAPE_PROPORTIONS.star.innerRatio);
-    } else if (this.shape === 'snowflake') {
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rotation);
-      this.drawSnowflake(ctx, this.size);
-    }
-    
-    ctx.restore();
-  }
+    function init() {
+      state.canvas = document.getElementById('canvas');
+      state.ctx = state.canvas.getContext('2d');
 
-  drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
-    let rot = Math.PI / 2 * 3;
-    let x = cx;
-    let y = cy;
-    const step = Math.PI / spikes;
-    
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - outerRadius);
-    
-    for (let i = 0; i < spikes; i++) {
-      x = cx + Math.cos(rot) * outerRadius;
-      y = cy + Math.sin(rot) * outerRadius;
-      ctx.lineTo(x, y);
-      rot += step;
-      
-      x = cx + Math.cos(rot) * innerRadius;
-      y = cy + Math.sin(rot) * innerRadius;
-      ctx.lineTo(x, y);
-      rot += step;
-    }
-    
-    ctx.lineTo(cx, cy - outerRadius);
-    ctx.closePath();
-    ctx.fill();
-  }
+      resizeCanvas();
 
-  drawSnowflake(ctx, size) {
-    ctx.strokeStyle = ctx.fillStyle;
-    ctx.lineWidth = size * SHAPE_PROPORTIONS.snowflake.lineWidthRatio;
-    ctx.lineCap = 'round';
-    
-    const { branchCount, branchPoint, sideLength } = SHAPE_PROPORTIONS.snowflake;
-    
-    ctx.beginPath();
-    for (let i = 0; i < branchCount; i++) {
-      const angle = (Math.PI / 3) * i;
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      
-      ctx.moveTo(0, 0);
-      ctx.lineTo(-sin * size, -cos * size);
-      
-      const branchY = -cos * size * branchPoint;
-      const branchX = -sin * size * branchPoint;
-      ctx.moveTo(branchX, branchY);
-      ctx.lineTo(
-        branchX - sin * size * sideLength - cos * size * (1 - branchPoint),
-        branchY - cos * size * sideLength + sin * size * (1 - branchPoint)
-      );
-      
-      ctx.moveTo(branchX, branchY);
-      ctx.lineTo(
-        branchX + sin * size * sideLength - cos * size * (1 - branchPoint),
-        branchY + cos * size * sideLength + sin * size * (1 - branchPoint)
-      );
-    }
-    ctx.stroke();
-  }
-}
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(resizeCanvas, 100);
+      });
 
-function init() {
-  state.canvas = document.getElementById('canvas');
-  state.ctx = state.canvas.getContext('2d');
-  
-  resizeCanvas();
-  
-  let resizeTimeout;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(resizeCanvas, 100);
-  });
-  
-  state.canvas.addEventListener('mousemove', (e) => {
-    const rect = state.canvas.getBoundingClientRect();
-    state.mouseX = (e.clientX - rect.left) / rect.width;
-    state.mouseY = (e.clientY - rect.top) / rect.height;
-  });
-  
-  initParticles();
-  initControls();
-  animate();
-}
+      state.canvas.addEventListener('mousemove', (e) => {
+        const rect = state.canvas.getBoundingClientRect();
+        state.mouseX = (e.clientX - rect.left) / rect.width;
+        state.mouseY = (e.clientY - rect.top) / rect.height;
+      });
 
-function resizeCanvas() {
-  state.canvas.width = window.innerWidth;
-  state.canvas.height = window.innerHeight;
-}
-
-function initParticles() {
-  const targetCount = CONFIG.particles.count;
-  const currentCount = state.particles.length;
-  
-  if (currentCount < targetCount) {
-    for (let i = currentCount; i < targetCount; i++) {
-      state.particles.push(new Particle(state.canvas, true));
-    }
-  } else if (currentCount > targetCount) {
-    state.particles.length = targetCount;
-  } else {
-    state.particles.forEach(p => p.reset(true));
-  }
-}
-
-function animate() {
-  if (!state.isPlaying) return;
-  
-  state.ctx.fillStyle = CONFIG.colors.background;
-  state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
-  
-  const canvasWidth = state.canvas.width;
-  const canvasHeight = state.canvas.height;
-  const particleCount = state.particles.length;
-  
-  for (let i = 0; i < particleCount; i++) {
-    state.particles[i].update(canvasWidth, canvasHeight, state.mouseX, state.mouseY);
-    state.particles[i].draw(state.ctx);
-  }
-  
-  state.animationId = requestAnimationFrame(animate);
-}
-
-function draw() {
-  state.ctx.fillStyle = CONFIG.colors.background;
-  state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
-  
-  const canvasWidth = state.canvas.width;
-  const canvasHeight = state.canvas.height;
-  const particleCount = state.particles.length;
-  
-  for (let i = 0; i < particleCount; i++) {
-    state.particles[i].update(canvasWidth, canvasHeight, state.mouseX, state.mouseY);
-    state.particles[i].draw(state.ctx);
-  }
-}
-
-function redraw() {
-  if (!state.isPlaying) draw();
-}
-
-function initControls() {
-  // Set initial button states for autoplay
-  document.getElementById('playBtn').disabled = true;
-  document.getElementById('pauseBtn').disabled = false;
-  
-  document.querySelectorAll('.section-header').forEach(header => {
-    header.addEventListener('click', () => {
-      header.parentElement.classList.toggle('collapsed');
-    });
-  });
-  
-  document.getElementById('sidebarToggle').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('hidden');
-  });
-  
-  document.getElementById('presetSelect').addEventListener('change', (e) => {
-    applyPreset(e.target.value);
-  });
-  
-  document.getElementById('playBtn').addEventListener('click', () => {
-    state.isPlaying = true;
-    document.getElementById('playBtn').disabled = true;
-    document.getElementById('pauseBtn').disabled = false;
-    animate();
-  });
-  
-  document.getElementById('pauseBtn').addEventListener('click', () => {
-    state.isPlaying = false;
-    document.getElementById('playBtn').disabled = false;
-    document.getElementById('pauseBtn').disabled = true;
-    if (state.animationId) cancelAnimationFrame(state.animationId);
-  });
-  
-  document.getElementById('savePngBtn').addEventListener('click', savePNG);
-  document.getElementById('saveHtmlBtn').addEventListener('click', saveHTML);
-  document.getElementById('showCodeBtn').addEventListener('click', showCode);
-  document.getElementById('resetBtn').addEventListener('click', resetConfig);
-  
-  initSlider('countSlider', 'countValue', (v) => {
-    CONFIG.particles.count = parseInt(v);
-    initParticles();
-    redraw();
-  });
-  
-  initSlider('minSizeSlider', 'minSizeValue', (v) => {
-    CONFIG.particles.minSize = parseFloat(v);
-    redraw();
-  }, (v) => parseFloat(v).toFixed(1));
-  
-  initSlider('maxSizeSlider', 'maxSizeValue', (v) => {
-    CONFIG.particles.maxSize = parseFloat(v);
-    redraw();
-  }, (v) => parseFloat(v).toFixed(1));
-  
-  document.getElementById('shapeSelect').addEventListener('change', (e) => {
-    CONFIG.particles.shape = e.target.value;
-    initParticles();
-    redraw();
-  });
-  
-  initSlider('angleSlider', 'angleValue', (v) => {
-    CONFIG.particles.angle = parseInt(v);
-    initParticles();
-    redraw();
-  }, (v) => parseInt(v) + '°');
-  
-  initSlider('speedSlider', 'speedValue', (v) => {
-    CONFIG.physics.speed = parseFloat(v);
-    redraw();
-  }, (v) => parseFloat(v).toFixed(1));
-  
-  initSlider('gravitySlider', 'gravityValue', (v) => {
-    CONFIG.physics.gravity = parseFloat(v);
-    redraw();
-  }, (v) => parseFloat(v).toFixed(1));
-  
-  initSlider('windSlider', 'windValue', (v) => {
-    CONFIG.physics.wind = parseFloat(v);
-    redraw();
-  }, (v) => parseFloat(v).toFixed(1));
-  
-  initSlider('spawnSpeedSlider', 'spawnSpeedValue', (v) => {
-    CONFIG.physics.spawnSpeed = parseFloat(v);
-    redraw();
-  }, (v) => parseFloat(v).toFixed(1));
-  
-  initSlider('turbulenceSlider', 'turbulenceValue', (v) => {
-    CONFIG.physics.turbulence = parseFloat(v);
-    redraw();
-  }, (v) => parseFloat(v).toFixed(1));
-  
-  document.getElementById('fadeModeSelect').addEventListener('change', (e) => {
-    CONFIG.behavior.fadeMode = e.target.value;
-    initParticles();
-    redraw();
-  });
-  
-  initSlider('fadeSpeedSlider', 'fadeSpeedValue', (v) => {
-    CONFIG.behavior.fadeSpeed = parseFloat(v);
-    redraw();
-  }, (v) => parseFloat(v).toFixed(3));
-  
-  initSlider('mouseInfluenceSlider', 'mouseInfluenceValue', (v) => {
-    CONFIG.mouse.influence = parseInt(v);
-    redraw();
-  });
-  
-  document.getElementById('mouseTrackingCheck').addEventListener('change', (e) => {
-    CONFIG.mouse.tracking = e.target.checked;
-    redraw();
-  });
-  
-  document.getElementById('rotationCheck').addEventListener('change', (e) => {
-    CONFIG.behavior.rotation = e.target.checked;
-    redraw();
-  });
-  
-  for (let i = 1; i <= 5; i++) {
-    setupColorPicker(`color${i}`, i - 1);
-  }
-  setupColorPicker('bgColor', null);
-  
-  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-  document.getElementById('closeModalBtn2').addEventListener('click', closeModal);
-  document.getElementById('copyCodeBtn').addEventListener('click', copyCode);
-  
-  document.getElementById('codeModal').addEventListener('click', (e) => {
-    if (e.target.id === 'codeModal') closeModal();
-  });
-}
-
-function initSlider(sliderId, valueId, onChange, formatter = null) {
-  const slider = document.getElementById(sliderId);
-  const valueDisplay = document.getElementById(valueId);
-  
-  slider.addEventListener('input', (e) => {
-    const value = e.target.value;
-    valueDisplay.textContent = formatter ? formatter(value) : value;
-    onChange(value);
-  });
-}
-
-function setupColorPicker(id, paletteIndex) {
-  const preview = document.getElementById(`${id}Preview`);
-  const picker = document.getElementById(`${id}Picker`);
-  const valueDisplay = document.getElementById(`${id}Value`);
-  
-  preview.addEventListener('click', () => picker.click());
-  
-  picker.addEventListener('input', (e) => {
-    const color = e.target.value;
-    preview.style.background = color;
-    valueDisplay.textContent = color;
-    
-    if (paletteIndex !== null) {
-      CONFIG.colors.palette[paletteIndex] = color;
       initParticles();
-    } else {
-      CONFIG.colors.background = color;
+      initControls();
+      animate();
     }
-    
-    redraw();
-  });
-}
 
-function applyPreset(presetName) {
-  const preset = PRESETS[presetName];
-  if (!preset) return;
-  
-  Object.keys(preset).forEach(section => {
-    Object.keys(preset[section]).forEach(key => {
-      if (key === 'palette') {
-        CONFIG.colors.palette = [...preset.colors.palette];
+    function resizeCanvas() {
+      state.canvas.width = window.innerWidth;
+      state.canvas.height = window.innerHeight;
+    }
+
+    function initParticles() {
+      const targetCount = CONFIG.particles.count;
+      const currentCount = state.particles.length;
+
+      if (currentCount < targetCount) {
+        for (let i = currentCount; i < targetCount; i++) {
+          state.particles.push(new Particle(state.canvas, true));
+        }
+      } else if (currentCount > targetCount) {
+        state.particles.length = targetCount;
       } else {
-        CONFIG[section][key] = preset[section][key];
+        state.particles.forEach(p => p.reset(true));
       }
-    });
-  });
-  
-  updateUIFromConfig();
-  initParticles();
-  redraw();
-}
+    }
 
-function updateUIFromConfig() {
-  const mappings = {
-    countSlider: { value: CONFIG.particles.count, display: CONFIG.particles.count },
-    minSizeSlider: { value: CONFIG.particles.minSize, display: CONFIG.particles.minSize.toFixed(1) },
-    maxSizeSlider: { value: CONFIG.particles.maxSize, display: CONFIG.particles.maxSize.toFixed(1) },
-    angleSlider: { value: CONFIG.particles.angle, display: CONFIG.particles.angle + '°' },
-    speedSlider: { value: CONFIG.physics.speed, display: CONFIG.physics.speed.toFixed(1) },
-    gravitySlider: { value: CONFIG.physics.gravity, display: CONFIG.physics.gravity.toFixed(1) },
-    windSlider: { value: CONFIG.physics.wind, display: CONFIG.physics.wind.toFixed(1) },
-    spawnSpeedSlider: { value: CONFIG.physics.spawnSpeed, display: CONFIG.physics.spawnSpeed.toFixed(1) },
-    turbulenceSlider: { value: CONFIG.physics.turbulence, display: CONFIG.physics.turbulence.toFixed(1) },
-    fadeSpeedSlider: { value: CONFIG.behavior.fadeSpeed, display: CONFIG.behavior.fadeSpeed.toFixed(3) },
-    mouseInfluenceSlider: { value: CONFIG.mouse.influence, display: CONFIG.mouse.influence }
-  };
-  
-  Object.keys(mappings).forEach(id => {
-    const slider = document.getElementById(id);
-    const valueId = id.replace('Slider', 'Value');
-    const valueDisplay = document.getElementById(valueId);
-    slider.value = mappings[id].value;
-    valueDisplay.textContent = mappings[id].display;
-  });
-  
-  document.getElementById('shapeSelect').value = CONFIG.particles.shape;
-  document.getElementById('fadeModeSelect').value = CONFIG.behavior.fadeMode;
-  document.getElementById('mouseTrackingCheck').checked = CONFIG.mouse.tracking;
-  document.getElementById('rotationCheck').checked = CONFIG.behavior.rotation;
-  
-  for (let i = 0; i < 5; i++) {
-    const color = CONFIG.colors.palette[i];
-    updateColorControl(`color${i + 1}Picker`, `color${i + 1}Preview`, `color${i + 1}Value`, color);
-  }
-  
-  updateColorControl('bgColorPicker', 'bgColorPreview', 'bgColorValue', CONFIG.colors.background);
-}
+    function animate() {
+      if (!state.isPlaying) return;
 
-function updateColorControl(pickerId, previewId, valueId, color) {
-  document.getElementById(pickerId).value = color;
-  document.getElementById(previewId).style.background = color;
-  document.getElementById(valueId).textContent = color;
-}
+      state.ctx.fillStyle = CONFIG.colors.background;
+      state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
 
-function resetConfig() {
-  Object.keys(ORIGINAL_CONFIG).forEach(section => {
-    Object.keys(ORIGINAL_CONFIG[section]).forEach(key => {
-      if (key === 'palette') {
-        CONFIG.colors.palette = [...ORIGINAL_CONFIG.colors.palette];
-      } else {
-        CONFIG[section][key] = ORIGINAL_CONFIG[section][key];
+      const canvasWidth = state.canvas.width;
+      const canvasHeight = state.canvas.height;
+      const particleCount = state.particles.length;
+
+      for (let i = 0; i < particleCount; i++) {
+        state.particles[i].update(canvasWidth, canvasHeight, state.mouseX, state.mouseY);
+        state.particles[i].draw(state.ctx);
       }
-    });
-  });
-  
-  document.getElementById('presetSelect').value = 'confetti';
-  updateUIFromConfig();
-  initParticles();
-  redraw();
-}
 
-function savePNG() {
-  const link = document.createElement('a');
-  link.download = 'particles.png';
-  link.href = state.canvas.toDataURL('image/png');
-  link.click();
-}
+      state.animationId = requestAnimationFrame(animate);
+    }
 
-function saveHTML() {
-  const html = generateStandaloneHTML();
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'particles.html';
-  a.click();
-  URL.revokeObjectURL(url);
-}
+    function draw() {
+      state.ctx.fillStyle = CONFIG.colors.background;
+      state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
 
-function showCode() {
-  const code = generateStandaloneHTML();
-  document.getElementById('codeDisplay').textContent = code;
-  document.getElementById('codeModal').classList.add('active');
-}
+      const canvasWidth = state.canvas.width;
+      const canvasHeight = state.canvas.height;
+      const particleCount = state.particles.length;
 
-function closeModal() {
-  document.getElementById('codeModal').classList.remove('active');
-}
+      for (let i = 0; i < particleCount; i++) {
+        state.particles[i].update(canvasWidth, canvasHeight, state.mouseX, state.mouseY);
+        state.particles[i].draw(state.ctx);
+      }
+    }
 
-function copyCode() {
-  const code = document.getElementById('codeDisplay').textContent;
-  navigator.clipboard.writeText(code).then(() => {
-    const btn = document.getElementById('copyCodeBtn');
-    const originalText = btn.textContent;
-    btn.textContent = 'Copied!';
-    setTimeout(() => {
-      btn.textContent = originalText;
-    }, 2000);
-  });
-}
+    function redraw() {
+      if (!state.isPlaying) draw();
+    }
 
-function generateStandaloneHTML() {
-  return `<!DOCTYPE html>
+    function initControls() {
+      // Set initial button states for autoplay
+      document.getElementById('playBtn').disabled = true;
+      document.getElementById('pauseBtn').disabled = false;
+
+      document.querySelectorAll('.section-header').forEach(header => {
+        header.addEventListener('click', () => {
+          header.parentElement.classList.toggle('collapsed');
+        });
+      });
+
+      document.getElementById('sidebarToggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('hidden');
+      });
+
+      document.getElementById('presetSelect').addEventListener('change', (e) => {
+        applyPreset(e.target.value);
+      });
+
+      document.getElementById('playBtn').addEventListener('click', () => {
+        state.isPlaying = true;
+        document.getElementById('playBtn').disabled = true;
+        document.getElementById('pauseBtn').disabled = false;
+        animate();
+      });
+
+      document.getElementById('pauseBtn').addEventListener('click', () => {
+        state.isPlaying = false;
+        document.getElementById('playBtn').disabled = false;
+        document.getElementById('pauseBtn').disabled = true;
+        if (state.animationId) cancelAnimationFrame(state.animationId);
+      });
+
+      document.getElementById('savePngBtn').addEventListener('click', savePNG);
+      document.getElementById('saveHtmlBtn').addEventListener('click', saveHTML);
+      document.getElementById('showCodeBtn').addEventListener('click', showCode);
+      document.getElementById('resetBtn').addEventListener('click', resetConfig);
+
+      initSlider('countSlider', 'countValue', (v) => {
+        CONFIG.particles.count = parseInt(v);
+        initParticles();
+        redraw();
+      });
+
+      initSlider('minSizeSlider', 'minSizeValue', (v) => {
+        CONFIG.particles.minSize = parseFloat(v);
+        redraw();
+      }, (v) => parseFloat(v).toFixed(1));
+
+      initSlider('maxSizeSlider', 'maxSizeValue', (v) => {
+        CONFIG.particles.maxSize = parseFloat(v);
+        redraw();
+      }, (v) => parseFloat(v).toFixed(1));
+
+      document.getElementById('shapeSelect').addEventListener('change', (e) => {
+        CONFIG.particles.shape = e.target.value;
+        initParticles();
+        redraw();
+      });
+
+      initSlider('angleSlider', 'angleValue', (v) => {
+        CONFIG.particles.angle = parseInt(v);
+        initParticles();
+        redraw();
+      }, (v) => parseInt(v) + '°');
+
+      initSlider('speedSlider', 'speedValue', (v) => {
+        CONFIG.physics.speed = parseFloat(v);
+        redraw();
+      }, (v) => parseFloat(v).toFixed(1));
+
+      initSlider('gravitySlider', 'gravityValue', (v) => {
+        CONFIG.physics.gravity = parseFloat(v);
+        redraw();
+      }, (v) => parseFloat(v).toFixed(1));
+
+      initSlider('windSlider', 'windValue', (v) => {
+        CONFIG.physics.wind = parseFloat(v);
+        redraw();
+      }, (v) => parseFloat(v).toFixed(1));
+
+      initSlider('spawnSpeedSlider', 'spawnSpeedValue', (v) => {
+        CONFIG.physics.spawnSpeed = parseFloat(v);
+        redraw();
+      }, (v) => parseFloat(v).toFixed(1));
+
+      initSlider('turbulenceSlider', 'turbulenceValue', (v) => {
+        CONFIG.physics.turbulence = parseFloat(v);
+        redraw();
+      }, (v) => parseFloat(v).toFixed(1));
+
+      document.getElementById('fadeModeSelect').addEventListener('change', (e) => {
+        CONFIG.behavior.fadeMode = e.target.value;
+        initParticles();
+        redraw();
+      });
+
+      initSlider('fadeSpeedSlider', 'fadeSpeedValue', (v) => {
+        CONFIG.behavior.fadeSpeed = parseFloat(v);
+        redraw();
+      }, (v) => parseFloat(v).toFixed(3));
+
+      initSlider('mouseInfluenceSlider', 'mouseInfluenceValue', (v) => {
+        CONFIG.mouse.influence = parseInt(v);
+        redraw();
+      });
+
+      document.getElementById('mouseTrackingCheck').addEventListener('change', (e) => {
+        CONFIG.mouse.tracking = e.target.checked;
+        redraw();
+      });
+
+      document.getElementById('rotationCheck').addEventListener('change', (e) => {
+        CONFIG.behavior.rotation = e.target.checked;
+        redraw();
+      });
+
+      for (let i = 1; i <= 5; i++) {
+        setupColorPicker(`color${i}`, i - 1);
+      }
+      setupColorPicker('bgColor', null);
+
+      document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+      document.getElementById('closeModalBtn2').addEventListener('click', closeModal);
+      document.getElementById('copyCodeBtn').addEventListener('click', copyCode);
+
+      document.getElementById('codeModal').addEventListener('click', (e) => {
+        if (e.target.id === 'codeModal') closeModal();
+      });
+    }
+
+    function initSlider(sliderId, valueId, onChange, formatter = null) {
+      const slider = document.getElementById(sliderId);
+      const valueDisplay = document.getElementById(valueId);
+
+      slider.addEventListener('input', (e) => {
+        const value = e.target.value;
+        valueDisplay.textContent = formatter ? formatter(value) : value;
+        onChange(value);
+      });
+    }
+
+    function setupColorPicker(id, paletteIndex) {
+      const preview = document.getElementById(`${id}Preview`);
+      const picker = document.getElementById(`${id}Picker`);
+      const valueDisplay = document.getElementById(`${id}Value`);
+
+      preview.addEventListener('click', () => picker.click());
+
+      picker.addEventListener('input', (e) => {
+        const color = e.target.value;
+        preview.style.background = color;
+        valueDisplay.textContent = color;
+
+        if (paletteIndex !== null) {
+          CONFIG.colors.palette[paletteIndex] = color;
+          initParticles();
+        } else {
+          CONFIG.colors.background = color;
+        }
+
+        redraw();
+      });
+    }
+
+    function applyPreset(presetName) {
+      const preset = PRESETS[presetName];
+      if (!preset) return;
+
+      Object.keys(preset).forEach(section => {
+        Object.keys(preset[section]).forEach(key => {
+          if (key === 'palette') {
+            CONFIG.colors.palette = [...preset.colors.palette];
+          } else {
+            CONFIG[section][key] = preset[section][key];
+          }
+        });
+      });
+
+      updateUIFromConfig();
+      initParticles();
+      redraw();
+    }
+
+    function updateUIFromConfig() {
+      const mappings = {
+        countSlider: { value: CONFIG.particles.count, display: CONFIG.particles.count },
+        minSizeSlider: { value: CONFIG.particles.minSize, display: CONFIG.particles.minSize.toFixed(1) },
+        maxSizeSlider: { value: CONFIG.particles.maxSize, display: CONFIG.particles.maxSize.toFixed(1) },
+        angleSlider: { value: CONFIG.particles.angle, display: CONFIG.particles.angle + '°' },
+        speedSlider: { value: CONFIG.physics.speed, display: CONFIG.physics.speed.toFixed(1) },
+        gravitySlider: { value: CONFIG.physics.gravity, display: CONFIG.physics.gravity.toFixed(1) },
+        windSlider: { value: CONFIG.physics.wind, display: CONFIG.physics.wind.toFixed(1) },
+        spawnSpeedSlider: { value: CONFIG.physics.spawnSpeed, display: CONFIG.physics.spawnSpeed.toFixed(1) },
+        turbulenceSlider: { value: CONFIG.physics.turbulence, display: CONFIG.physics.turbulence.toFixed(1) },
+        fadeSpeedSlider: { value: CONFIG.behavior.fadeSpeed, display: CONFIG.behavior.fadeSpeed.toFixed(3) },
+        mouseInfluenceSlider: { value: CONFIG.mouse.influence, display: CONFIG.mouse.influence }
+      };
+
+      Object.keys(mappings).forEach(id => {
+        const slider = document.getElementById(id);
+        const valueId = id.replace('Slider', 'Value');
+        const valueDisplay = document.getElementById(valueId);
+        slider.value = mappings[id].value;
+        valueDisplay.textContent = mappings[id].display;
+      });
+
+      document.getElementById('shapeSelect').value = CONFIG.particles.shape;
+      document.getElementById('fadeModeSelect').value = CONFIG.behavior.fadeMode;
+      document.getElementById('mouseTrackingCheck').checked = CONFIG.mouse.tracking;
+      document.getElementById('rotationCheck').checked = CONFIG.behavior.rotation;
+
+      for (let i = 0; i < 5; i++) {
+        const color = CONFIG.colors.palette[i];
+        updateColorControl(`color${i + 1}Picker`, `color${i + 1}Preview`, `color${i + 1}Value`, color);
+      }
+
+      updateColorControl('bgColorPicker', 'bgColorPreview', 'bgColorValue', CONFIG.colors.background);
+    }
+
+    function updateColorControl(pickerId, previewId, valueId, color) {
+      document.getElementById(pickerId).value = color;
+      document.getElementById(previewId).style.background = color;
+      document.getElementById(valueId).textContent = color;
+    }
+
+    function resetConfig() {
+      Object.keys(ORIGINAL_CONFIG).forEach(section => {
+        Object.keys(ORIGINAL_CONFIG[section]).forEach(key => {
+          if (key === 'palette') {
+            CONFIG.colors.palette = [...ORIGINAL_CONFIG.colors.palette];
+          } else {
+            CONFIG[section][key] = ORIGINAL_CONFIG[section][key];
+          }
+        });
+      });
+
+      document.getElementById('presetSelect').value = 'confetti';
+      updateUIFromConfig();
+      initParticles();
+      redraw();
+    }
+
+    function savePNG() {
+      const link = document.createElement('a');
+      link.download = 'particles.png';
+      link.href = state.canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function saveHTML() {
+      const html = generateStandaloneHTML();
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'particles.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function showCode() {
+      const code = generateStandaloneHTML();
+      document.getElementById('codeDisplay').textContent = code;
+      document.getElementById('codeModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('codeModal').classList.remove('active');
+    }
+
+    function copyCode() {
+      const code = document.getElementById('codeDisplay').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyCodeBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    function generateStandaloneHTML() {
+      return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -1755,10 +1761,11 @@ animate();
 </` + `script>
 </body>
 </html>`;
-}
+    }
 
-window.addEventListener('DOMContentLoaded', init);
-</script>
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
 
 </body>
+
 </html>
